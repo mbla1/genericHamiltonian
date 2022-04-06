@@ -1,6 +1,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <vector>
 #include <iomanip>
 #include "methodeMatrice.h"
 
@@ -22,7 +23,7 @@ double calculMoments(double coordinates1[], double coordinates2[], double masses
     return somme;
 }
 
-void makeKineticOrder4(double matrice[], long elecStates, long coordinate1,
+void makeKineticOrder4(vector<double>& matrice, long elecStates, long coordinate1,
 			   	long coordinate2, double step1, double step2, double invReducedMass, double mom2, double mom12) {
 	long taille = elecStates * coordinate1 * coordinate2;
 	//First coordinate
@@ -131,7 +132,7 @@ void makeKineticOrder4(double matrice[], long elecStates, long coordinate1,
     }
 }
 
-void makeGradient1(double matrice[], long coordinate1, long coordinate2, double step1, double invReducedMass) {
+void makeGradient1(vector<double>& matrice, long coordinate1, long coordinate2, double step1, double invReducedMass) {
 	long tailleGrille = coordinate1 * coordinate2;
 	for (int j = 0; j < coordinate1; j++) {
         for (int k = 0; k < coordinate2; k++) {
@@ -151,7 +152,7 @@ void makeGradient1(double matrice[], long coordinate1, long coordinate2, double 
     }
 }
 
-void makeGradient2(double matrice[], long coordinate1, long coordinate2, double step2) {
+void makeGradient2(vector<double>& matrice, long coordinate1, long coordinate2, double step2) {
 	long tailleGrille = coordinate1 * coordinate2;
 	for (int j = 0; j < coordinate1; j++) {
         for (int k = 0; k < coordinate2; k++) {
@@ -171,7 +172,7 @@ void makeGradient2(double matrice[], long coordinate1, long coordinate2, double 
     }
 }
 
-void makeGradient6Order1(double matrice[], long coordinate1, long coordinate2, double step1, double reducedMass) {
+void makeGradient6Order1(vector<double>& matrice, long coordinate1, long coordinate2, double step1, double reducedMass) {
 	long tailleGrille = coordinate1 * coordinate2;
 	for (int j = 0; j < coordinate1; j++) {
         for (int k = 0; k < coordinate2; k++) {
@@ -197,7 +198,7 @@ void makeGradient6Order1(double matrice[], long coordinate1, long coordinate2, d
     }
 }
 
-void makeGradient6Order2(double matrice[], long coordinate1, long coordinate2, double step2) {
+void makeGradient6Order2(vector<double>& matrice, long coordinate1, long coordinate2, double step2) {
 	long tailleGrille = coordinate1 * coordinate2;
 	for (int j = 0; j < coordinate1; j++) {
         for (int k = 0; k < coordinate2; k++) {
@@ -223,7 +224,7 @@ void makeGradient6Order2(double matrice[], long coordinate1, long coordinate2, d
     }
 }
 
-bool isAntiSymmetric(double matrice[], long dimension) {
+bool isAntiSymmetric(const vector<double>& matrice, long dimension) {
 	int compteur = 0;
 
     for (int i = 0; i < dimension; i++) {
