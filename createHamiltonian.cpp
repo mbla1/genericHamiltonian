@@ -54,6 +54,9 @@ Dipoles make_dipoles(const vector<double>& perm, const vector<double>& trans, in
 	return Dipoles{cpt_perm + cpt_trans, grid_size, dip_vec};
 }
 
+/* It is now tested, and it worked flawlessly for LiH!!!
+ */
+
 int main() {
 	constexpr long coord1 = 512; //The order of the coordinates is crucial!!!
     constexpr long coord2 = 1;
