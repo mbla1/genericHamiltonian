@@ -71,7 +71,7 @@ int main() {
 
 	// Potential
 	vector<double> potential = prepare_file("source/adiab_sigma_pot512", grid_size, elec_size + 1); // first column is the radius
-	Potential pot = make_potential(potential, grid_size, elec_size);
+	Potential pot = make_potential(potential, grid_size, elec_size); // For N2, do not put the potentials to 0
 
 	// Tau
 	vector<double> tau = prepare_file("source/adiab_sigma_nac512", grid_size, 4);
@@ -98,8 +98,24 @@ int main() {
 	// Transition dipoles
 	vector<double> t_dip = prepare_file("source/adiab_sigma_mom512", grid_size, 4); // Strange set of data
 	vector<double> p_dip(size); // Zero-filled vector
-	Dipoles dip_vec = make_dipoles(p_dip, t_dip, grid_size, elec_size);
-	
+	for(int i = 0; i < grid_size; ++i) 
+		temp.push_back(t_dip[0 * grid_size + i]);
+	Element dip01{0, 1, temp};
+	temp.clear();
+
+	for(int i = 0; i < grid_size; ++i) 
+		temp.push_back(t_dip[1 * grid_size + i]);
+	Element dip02{0, 2, temp};
+	temp.clear();
+
+	for(int i = 0; i < grid_size; ++i) 
+		temp.push_back(t_dip[2 * grid_size + i]);
+	Element dip03{0, 3, temp};
+	temp.clear();
+
+	vecElem = {dip01, dip02, dip03};
+	Dipoles dip_vec{3, grid_size, vecElem};
+
 	// Allocating the memory to make the code a bit faster
 	vector<double> hamiltonien;
 	hamiltonien.reserve(hamiltonian_size);
@@ -110,7 +126,7 @@ int main() {
 	return 0;
 /*
 	//Computation of the reduced masses
-	double mu1inv = (nitrogen + nitrogen)/(nitrogen * nitrogen); //Reduced mass 
+	double mu1inv = (nitrogen_mass + nitrogen_mass)/(nitrogen_mass * nitrogen_mass); //Reduced mass 
 	//double mu1inv = 1./1617.95; //Reduced mass 
 	double mu2inv = 0;
 	double mu12inv = 0.;
