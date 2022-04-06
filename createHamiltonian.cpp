@@ -64,8 +64,9 @@ int main() {
 	constexpr double ang2au = 1.88973;
     constexpr double inv_step_coord1 = 1 / (0.040625 * ang2au); //Inverse of NP with the correction from Angströms to Bohr
     constexpr double inv_step_coord2 = 1; //NP
-	double saw2au = 1822.889950851334;
-	double nitrogen_mass = saw2au * 6.941;
+	constexpr double saw2au = 1822.889950851334;
+	constexpr double nitrogen_mass = saw2au * 6.941;
+	const string output_path = "operators/hamiltonianN2.txt";
 
 	cout.precision(12);
 
@@ -96,25 +97,25 @@ int main() {
 
 
 	// Transition dipoles
-	vector<double> t_dip = prepare_file("source/adiab_sigma_mom512", grid_size, 4); // Strange set of data
-	vector<double> p_dip(size); // Zero-filled vector
-	for(int i = 0; i < grid_size; ++i) 
-		temp.push_back(t_dip[0 * grid_size + i]);
-	Element dip01{0, 1, temp};
-	temp.clear();
+	//vector<double> t_dip = prepare_file("source/adiab_sigma_mom512", grid_size, 4); // Strange set of data
+	//vector<double> p_dip(size); // Zero-filled vector
+	//for(int i = 0; i < grid_size; ++i) 
+	//	temp.push_back(t_dip[0 * grid_size + i]);
+	//Element dip01{0, 1, temp};
+	//temp.clear();
 
-	for(int i = 0; i < grid_size; ++i) 
-		temp.push_back(t_dip[1 * grid_size + i]);
-	Element dip02{0, 2, temp};
-	temp.clear();
+	//for(int i = 0; i < grid_size; ++i) 
+	//	temp.push_back(t_dip[1 * grid_size + i]);
+	//Element dip02{0, 2, temp};
+	//temp.clear();
 
-	for(int i = 0; i < grid_size; ++i) 
-		temp.push_back(t_dip[2 * grid_size + i]);
-	Element dip03{0, 3, temp};
-	temp.clear();
+	//for(int i = 0; i < grid_size; ++i) 
+	//	temp.push_back(t_dip[2 * grid_size + i]);
+	//Element dip03{0, 3, temp};
+	//temp.clear();
 
-	vecElem = {dip01, dip02, dip03};
-	Dipoles dip_vec{3, grid_size, vecElem};
+	//vecElem = {dip01, dip02, dip03};
+	//Dipoles dip_vec{3, grid_size, vecElem};
 
 	// Allocating the memory to make the code a bit faster
 	vector<double> hamiltonien;
@@ -123,10 +124,8 @@ int main() {
 	vector<double> gradient1;
 	gradient1.reserve(grid_size * grid_size);
 
-	return 0;
-/*
-	//Computation of the reduced masses
-	double mu1inv = (nitrogen_mass + nitrogen_mass)/(nitrogen_mass * nitrogen_mass); //Reduced mass 
+	// Computation of the reduced masses
+	double mu1inv = (nitrogen_mass + nitrogen_mass)/(nitrogen_mass * nitrogen_mass); // Reduced mass 
 	//double mu1inv = 1./1617.95; //Reduced mass 
 	double mu2inv = 0;
 	double mu12inv = 0.;
@@ -135,11 +134,9 @@ int main() {
 	cout << "mu2inv : " << mu2inv << endl;
 	cout << "mu12inv : " << mu12inv << endl;
 
-	//Kinetic energy
 	cout << "Building the kinetic elements" << endl;
 	makeKineticOrder4(hamiltonien, elec_size, coord1, coord2, inv_step_coord1, inv_step_coord2, mu1inv, mu2inv, mu12inv);
 
-	//Gradients
 	cout << "Constructing the gradients" << endl;
 	makeGradient6Order1(gradient1, coord1, coord2, inv_step_coord1, mu1inv);
 	//makeGradient1(gradient1, coord1, coord2, inv_step_coord1, mu1inv);
@@ -149,15 +146,44 @@ int main() {
 		cout << "The first gradient is antisymmetric!" <<  endl;
 	}
 
-	return 0;
-
 	//Tau vectors
 	cout << "Building Tau vectors" << endl;
 
 	//Scalar product between the Tau vectors and gradients
 	cout << "Building the scalar products between Tau vectors and gradients" << endl;
 	//To Loïc: those should alternate between the coordinates (q1 and q2) and the electronic couplings: (0,1),(0,2),(1,2)
+	
+	makeNac(hamiltonien, gradient1, nac_vec, grid_size, elec_size);
 
+	cout << "Adding the potential vector" << endl;
+
+	addPotential(hamiltonien, pot, size);	
+
+	cout << "Symmetry test of the hamiltonian" << endl;
+
+	bool testSym = isSymmetric(hamiltonien, size);
+
+	if (!testSym) {
+		cout << "This matrix is not symmetrical!" << endl;
+		return -1;
+	} else {
+		cout << "This matrix is symmetrical! Isn't it nice?" << endl;
+	}
+
+	cout << "Exporting the hamiltonian in DOK format" << endl;
+
+	bool testWriting = writeSparseForm(hamiltonien, size, output_path);
+
+	if (!testWriting) {
+		cout << "An error occured while trying to write the file!" << endl;
+		return -1;
+	} else {
+		cout << "Everything worked correctly! It's done!" << endl;
+	}
+
+	return 0;
+	
+/*
 	makeNac(nac21, gradient1, vec21, grid_size);
 	makeNac(nac31, gradient1, vec31, grid_size);
 	makeNac(nac32, gradient1, vec32, grid_size);
@@ -204,43 +230,6 @@ int main() {
 	addNac(hamiltonien, nac75, 6, 4, size, grid_size);
 	addNac(hamiltonien, nac76, 6, 5, size, grid_size);
 
-	cout << "Loading the potential energy files" << endl;
 
-	double potential[size];
-
-	string nomsFichiersPot[elec_size] = {"1", "2", "3", "4", "5", "6", "7"}; //Autant de potentiels que d'etats electroniques
-
-	bool testPotential = loadPotential(potential, grid_size, "source/pot", nomsFichiersPot, ".txt", elec_size);
-
-	if (!testPotential) {
-		cout << "An error occured while reading the potential files!" << endl;
-		return -1;
-	}
-
-	cout << "Adding the potential vector" << endl;
-
-	addPotential(hamiltonien, potential, size);	
-
-	cout << "Symmetry test of the hamiltonian" << endl;
-
-	bool testSym = isSymmetric(hamiltonien, size);
-
-	if (!testSym) {
-		cout << "This matrix is not symmetrical!" << endl;
-		return -1;
-	} else {
-		cout << "This matrix is symmetrical! Isn't it nice?" << endl;
-	}
-
-	cout << "Exporting the hamiltonian in DOK format" << endl;
-
-	bool testWriting = writeSparseForm(hamiltonien, size, "hamiltonienLiHAlt4O.txt");
-
-	if (!testWriting) {
-		cout << "An error occured while trying to write the file!" << endl;
-		return -1;
-	} else {
-		cout << "Everything worked correctly! It's done!" << endl;
-		return 0;
 	}*/
 }

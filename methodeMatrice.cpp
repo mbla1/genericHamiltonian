@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <iomanip>
+#include "Hamiltonian.h"
 #include "methodeMatrice.h"
 
 using namespace std;
@@ -259,10 +260,20 @@ bool loadTau(double vecteur[], long dimension, string directory) {
     entreeNAC.close();
 }
 
-void makeNac(double matrice[], double gradient[], double vecteur[], long dimension) {
-	for (long i = 0; i < dimension; i++) {
-		for (long j = 0; j < dimension; j++) {
-			matrice[j * dimension + i] += gradient[j * dimension + i] * vecteur[j];
+void makeNac(vector<double>& matrice, const vector<double>& gradient, const Nac& vec_nac, int grid_size, int elec_size) {
+	for(int es1 = 0; es1 < elec_size; ++es1){
+		for(int es2 = 0; es2 < elec_size && es2 != es1; ++es2){
+			Element el = vec_nac.search(es1, es2);	
+			if(el.es_init < 0 && el.es_fin < 0) break; // Element not found
+			for(int i = 0; i < grid_size; ++i){
+				for(int j = 0; j < grid_size; ++j){
+					matrice[(es1 * grid_size + j) * elec_size * grid_size + 
+					es2 * grid_size + i] += gradient[j * grid_size + i] * el.values[j];
+
+					matrice[(es2 * grid_size + i) * elec_size * grid_size + 
+					es1 * grid_size + j] += gradient[j * grid_size + i] * el.values[j]; // Transpose
+				}
+			}
 		}
 	}
 }
@@ -317,7 +328,7 @@ void addNacAlt(double matrice[], double matriceNac[], long elecState1, long elec
 	}
 }
 
-bool isSymmetric(double matrice[], long dimension) {
+bool isSymmetric(const vector<double>& matrice, long dimension) {
 	long compteur = 0;
 	for (long i = 0; i < dimension; i++) {
 		for (long j = 0; j < dimension; j++) {
@@ -334,34 +345,13 @@ bool isSymmetric(double matrice[], long dimension) {
 	}
 }
 
-bool loadPotential(double vecteur[], long gridDimension, string directory, 
-				string filenames[], string extension, int nFiles) {
-	ifstream entree;
-	string valeur;
-	for (int i = 0; i < nFiles; i++) {
-		entree.open(directory + filenames[i] + extension);
-		if (entree) {
-			for (long j = 0; j < gridDimension; j++) {
-				getline(entree, valeur);
-				vecteur[i * gridDimension + j] = stod(valeur);	
-			}
-		} else {
-			cerr << "Could not open: " << directory + filenames[i] + extension << endl;
-			return false;	
-		}
-		entree.close();
-	}
-
-	return true;
-}
-
-void addPotential(double matrice[], double vecteur[], long fullDimension) {
+void addPotential(vector<double>& matrice, const Potential& pot, long fullDimension) {
 	for (long i = 0; i < fullDimension; i++) {
-		matrice[i * fullDimension + i] += vecteur[i];
+		matrice[i * fullDimension + i] += pot[i];
 	}
 }
 
-bool writeSparseForm(double matrice[], long dimension, string filename) {
+bool writeSparseForm(const vector<double>& matrice, long dimension, string filename) {
 	ofstream sortie;
 	sortie << setprecision(12);
 	sortie.open(filename);

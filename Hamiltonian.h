@@ -80,3 +80,13 @@ Wavefunction operator*(const Wavefunction& wf, double d);
 Wavefunction operator*(double d, const Wavefunction& wf);
 Wavefunction operator/(const Wavefunction& wf, double d);
 Wavefunction operator/(const Wavefunction& wf, std::complex<double> cd);
+
+struct Hamiltonian{
+	int grid_size;
+	int elec_size;
+	int full_size;
+
+	std::vector<double> matrix;
+
+	double& operator()(int grid_point1, int es1, int grid_point2, int es2);
+};

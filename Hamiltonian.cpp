@@ -56,7 +56,8 @@ Element Nac::search(int es1, int es2) const{
 		else if(el.es_init == es2 && el.es_fin == es1)
 			return el.opposite();
 	}
-	cerr << "Element not found\n";
+	vector<double> temp;
+	return Element{-1, -1, temp};	// If not found, return nothing.
 }
 
 /* A structure for the Dipoles, which is similar to Nac.
@@ -128,4 +129,8 @@ Wavefunction operator/(const Wavefunction& wf, double d){
 		div.coeff[i] /= d;
 
 	return div;
+}
+
+double& Hamiltonian::operator()(int grid_point1, int es1, int grid_point2, int es2){
+	return matrix[(es1 * grid_size + grid_point1) * elec_size * grid_size + es2 * grid_size + grid_point2];
 }

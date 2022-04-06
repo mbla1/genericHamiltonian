@@ -22,7 +22,7 @@ bool isAntiSymmetric(const std::vector<double>& matrice, long dimension);
 
 bool loadTau(double vecteur[], long dimension, std::string directory);
 
-void makeNac(double matrice[], double gradient[], double vecteur[], long dimension);
+void makeNac(std::vector<double>& matrice, const std::vector<double>& gradient, const Nac& vec_nac, int grid_size, int elec_size);
 
 void makeNacAlt(double matrice[], double gradient[], double vecteur[], long dimension);
 
@@ -32,14 +32,11 @@ void addNac(double matrice[], double matriceNac[], long elecState1, long elecSta
 
 void addNacAlt(double matrice[], double matriceNac[], long elecState1, long elecState2, long fullDimension, long gridDimension);
 
-bool isSymmetric(double matrice[], long dimension);
+bool isSymmetric(const std::vector<double>& matrice, long dimension);
 
-bool loadPotential(double vecteur[], long gridDimension, std::string directory, 
-				std::string filenames[], std::string extension, int nFiles);
+void addPotential(std::vector<double>& matrice, const Potential& pot, long fullDimension);
 
-void addPotential(double matrice[], double vecteur[], long fullDimension);
-
-bool writeSparseForm(double matrice[], long dimension, std::string filename);
+bool writeSparseForm(const std::vector<double>& matrice, long dimension, std::string filename);
 
 void printSparseMat(double matrice[], long dimension);
 
