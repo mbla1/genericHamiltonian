@@ -54,9 +54,6 @@ Dipoles make_dipoles(const vector<double>& perm, const vector<double>& trans, in
 	return Dipoles{cpt_perm + cpt_trans, grid_size, dip_vec};
 }
 
-/* It is now tested, and it worked flawlessly for LiH!!!
- */
-
 int main() {
 	constexpr long coord1 = 512; //The order of the coordinates is crucial!!!
     constexpr long coord2 = 1;
@@ -65,11 +62,11 @@ int main() {
     constexpr long size = coord1 * coord2 * elec_size;
     constexpr long hamiltonian_size = size * size;
 	constexpr double ang2au = 1.88973;
-    constexpr double inv_step_coord1 = 1 / (0.040625 * ang2au); //Inverse of NP with the correction from Angströms to Bohr
+    constexpr double inv_step_coord1 = 1 / (0.010176125245); //Inverse of NP with the correction from Angströms to Bohr
     constexpr double inv_step_coord2 = 1; //NP
 	constexpr double saw2au = 1822.889950851334;
-	constexpr double nitrogen_mass = saw2au * 6.941;
-	const string output_path = "operators/hamiltonianN2.txt";
+	constexpr double nitrogen_mass = saw2au * 14.003;
+	const string output_path = "output/hamiltonianN2.txt";
 
 	cout.precision(12);
 
@@ -98,34 +95,9 @@ int main() {
 
 	Nac nac_vec{3, grid_size, vecElem};
 
+	vector<double> hamiltonien(hamiltonian_size);
 
-	// Transition dipoles
-	//vector<double> t_dip = prepare_file("source/adiab_sigma_mom512", grid_size, 4); // Strange set of data
-	//vector<double> p_dip(size); // Zero-filled vector
-	//for(int i = 0; i < grid_size; ++i) 
-	//	temp.push_back(t_dip[0 * grid_size + i]);
-	//Element dip01{0, 1, temp};
-	//temp.clear();
-
-	//for(int i = 0; i < grid_size; ++i) 
-	//	temp.push_back(t_dip[1 * grid_size + i]);
-	//Element dip02{0, 2, temp};
-	//temp.clear();
-
-	//for(int i = 0; i < grid_size; ++i) 
-	//	temp.push_back(t_dip[2 * grid_size + i]);
-	//Element dip03{0, 3, temp};
-	//temp.clear();
-
-	//vecElem = {dip01, dip02, dip03};
-	//Dipoles dip_vec{3, grid_size, vecElem};
-
-	// Allocating the memory to make the code a bit faster
-	vector<double> hamiltonien;
-	hamiltonien.reserve(hamiltonian_size);
-
-	vector<double> gradient1;
-	gradient1.reserve(grid_size * grid_size);
+	vector<double> gradient1(grid_size * grid_size);
 
 	// Computation of the reduced masses
 	double mu1inv = (nitrogen_mass + nitrogen_mass)/(nitrogen_mass * nitrogen_mass); // Reduced mass 
@@ -142,20 +114,13 @@ int main() {
 
 	cout << "Constructing the gradients" << endl;
 	makeGradient6Order1(gradient1, coord1, coord2, inv_step_coord1, mu1inv);
-	//makeGradient1(gradient1, coord1, coord2, inv_step_coord1, mu1inv);
 
 	cout << "Checking out the anti-symmetry" << endl;
 	if(isAntiSymmetric(gradient1, grid_size)) {
 		cout << "The first gradient is antisymmetric!" <<  endl;
 	}
 
-	//Tau vectors
-	cout << "Building Tau vectors" << endl;
-
-	//Scalar product between the Tau vectors and gradients
 	cout << "Building the scalar products between Tau vectors and gradients" << endl;
-	//To Loïc: those should alternate between the coordinates (q1 and q2) and the electronic couplings: (0,1),(0,2),(1,2)
-	
 	makeNac(hamiltonien, gradient1, nac_vec, grid_size, elec_size);
 
 	cout << "Adding the potential vector" << endl;
@@ -185,54 +150,4 @@ int main() {
 	}
 
 	return 0;
-	
-/*
-	makeNac(nac21, gradient1, vec21, grid_size);
-	makeNac(nac31, gradient1, vec31, grid_size);
-	makeNac(nac32, gradient1, vec32, grid_size);
-	makeNac(nac41, gradient1, vec41, grid_size);
-	makeNac(nac42, gradient1, vec42, grid_size);
-	makeNac(nac43, gradient1, vec43, grid_size);
-	makeNac(nac51, gradient1, vec51, grid_size);
-	makeNac(nac52, gradient1, vec52, grid_size);
-	makeNac(nac53, gradient1, vec53, grid_size);
-	makeNac(nac54, gradient1, vec54, grid_size);
-	makeNac(nac61, gradient1, vec61, grid_size);
-	makeNac(nac62, gradient1, vec62, grid_size);
-	makeNac(nac63, gradient1, vec63, grid_size);
-	makeNac(nac64, gradient1, vec64, grid_size);
-	makeNac(nac65, gradient1, vec65, grid_size);
-	makeNac(nac71, gradient1, vec71, grid_size);
-	makeNac(nac72, gradient1, vec72, grid_size);
-	makeNac(nac73, gradient1, vec73, grid_size);
-	makeNac(nac74, gradient1, vec74, grid_size);
-	makeNac(nac75, gradient1, vec75, grid_size);
-	makeNac(nac76, gradient1, vec76, grid_size);
-
-	cout << "Adding the NAC" << endl;
-
-	addNac(hamiltonien, nac21, 1, 0, size, grid_size);
-	addNac(hamiltonien, nac31, 2, 0, size, grid_size);
-	addNac(hamiltonien, nac32, 2, 1, size, grid_size);
-	addNac(hamiltonien, nac41, 3, 0, size, grid_size);
-	addNac(hamiltonien, nac42, 3, 1, size, grid_size);
-	addNac(hamiltonien, nac43, 3, 2, size, grid_size);
-	addNac(hamiltonien, nac51, 4, 0, size, grid_size);
-	addNac(hamiltonien, nac52, 4, 1, size, grid_size);
-	addNac(hamiltonien, nac53, 4, 2, size, grid_size);
-	addNac(hamiltonien, nac54, 4, 3, size, grid_size);
-	addNac(hamiltonien, nac61, 5, 0, size, grid_size);
-	addNac(hamiltonien, nac62, 5, 1, size, grid_size);
-	addNac(hamiltonien, nac63, 5, 2, size, grid_size);
-	addNac(hamiltonien, nac64, 5, 3, size, grid_size);
-	addNac(hamiltonien, nac65, 5, 4, size, grid_size);
-	addNac(hamiltonien, nac71, 6, 0, size, grid_size);
-	addNac(hamiltonien, nac72, 6, 1, size, grid_size);
-	addNac(hamiltonien, nac73, 6, 2, size, grid_size);
-	addNac(hamiltonien, nac74, 6, 3, size, grid_size);
-	addNac(hamiltonien, nac75, 6, 4, size, grid_size);
-	addNac(hamiltonien, nac76, 6, 5, size, grid_size);
-
-
-	}*/
 }

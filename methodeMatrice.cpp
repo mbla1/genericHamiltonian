@@ -264,14 +264,15 @@ void makeNac(vector<double>& matrice, const vector<double>& gradient, const Nac&
 	for(int es1 = 0; es1 < elec_size; ++es1){
 		for(int es2 = 0; es2 < elec_size && es2 != es1; ++es2){
 			Element el = vec_nac.search(es1, es2);	
-			if(el.es_init < 0 && el.es_fin < 0) break; // Element not found
-			for(int i = 0; i < grid_size; ++i){
-				for(int j = 0; j < grid_size; ++j){
-					matrice[(es1 * grid_size + j) * elec_size * grid_size + 
-					es2 * grid_size + i] += gradient[j * grid_size + i] * el.values[j];
+			if(el.es_init > 0 && el.es_fin > 0){
+				for(int i = 0; i < grid_size; ++i){
+					for(int j = 0; j < grid_size; ++j){
+						matrice[(es1 * grid_size + j) * elec_size * grid_size + 
+						es2 * grid_size + i] += gradient[j * grid_size + i] * el[j];
 
-					matrice[(es2 * grid_size + i) * elec_size * grid_size + 
-					es1 * grid_size + j] += gradient[j * grid_size + i] * el.values[j]; // Transpose
+						matrice[(es2 * grid_size + i) * elec_size * grid_size + 
+						es1 * grid_size + j] += gradient[j * grid_size + i] * el[j]; // Transpose
+					}
 				}
 			}
 		}
